@@ -23,12 +23,14 @@ import java.util.regex.Pattern;
 public class HabitParser {
 
     private static final Pattern NUMBER_PATTERN = Pattern.compile("(\\d+(?:[.,]\\d+)?)");
+    private static final Pattern SCREEN_TIME_PATTERN = Pattern.compile("(\\d+)\\s*h(?:our)?s?\\s*(\\d+)\\s*m(?:in)?");
 
     // keyword (lowercase, normalized apostrophe) -> [category, subtype, unit]
     // Order matters: more specific keywords should be listed BEFORE more generic ones.
     private static final Map<String, String[]> RULES = new LinkedHashMap<>();
 
     static {
+
         // Exercise
         RULES.put("turnik", new String[]{"EXERCISE", "pullup", "count"});
 
@@ -53,7 +55,11 @@ public class HabitParser {
         RULES.put("kiraga", new String[]{"EXPENSE", "transport", "som"});
         RULES.put("taxi", new String[]{"EXPENSE", "transport", "som"});
         RULES.put("taksi", new String[]{"EXPENSE", "transport", "som"});
+        RULES.put("metro", new String[]{"EXPENSE", "transport", "som"});
 
+        RULES.put("produkta", new String[]{"EXPENSE", "food", "som"});
+        RULES.put("produxta", new String[]{"EXPENSE", "food", "som"});
+        RULES.put("food", new String[]{"EXPENSE", "food", "som"});
         RULES.put("ovqat", new String[]{"EXPENSE", "food", "som"});
         RULES.put("nonushta", new String[]{"EXPENSE", "food", "som"});
         RULES.put("tushlik", new String[]{"EXPENSE", "food", "som"});
@@ -61,6 +67,8 @@ public class HabitParser {
 
         RULES.put("so'm", new String[]{"EXPENSE", "other", "som"});
         RULES.put("som", new String[]{"EXPENSE", "other", "som"});
+
+
     }
 
     /**
@@ -102,6 +110,15 @@ public class HabitParser {
                 String[] meta = rule.getValue();
                 return new ParsedEntry(meta[0], meta[1], value, meta[2], dayOffset);
             }
+        }
+
+        // Screen time special case: "3h 27m" -> total minutes
+        Matcher screenTime = SCREEN_TIME_PATTERN.matcher(normalized);
+        if (screenTime.find()) {
+            int hours = Integer.parseInt(screenTime.group(1));
+            int minutes = Integer.parseInt(screenTime.group(2));
+            BigDecimal totalMinutes = BigDecimal.valueOf(hours * 60L + minutes);
+            return new ParsedEntry("SCREEN_TIME", "screen_time", totalMinutes, "minutes", dayOffset);
         }
 
         // 4. no keyword matched -> store as CUSTOM/unspecified so nothing gets silently dropped

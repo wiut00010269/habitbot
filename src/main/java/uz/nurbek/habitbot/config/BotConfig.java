@@ -1,12 +1,12 @@
 package uz.nurbek.habitbot.config;
 
+import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
-import org.telegram.telegrambots.meta.TelegramBotsApi;
+import org.telegram.telegrambots.longpolling.TelegramBotsLongPollingApplication;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
-import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 import uz.nurbek.habitbot.bot.TelegramBotService;
 
 @Slf4j
@@ -15,15 +15,24 @@ import uz.nurbek.habitbot.bot.TelegramBotService;
 public class BotConfig {
 
     private final TelegramBotService telegramBotService;
+    private TelegramBotsLongPollingApplication botsApplication;
 
     @EventListener(org.springframework.boot.context.event.ApplicationReadyEvent.class)
     public void registerBot() {
         try {
-            TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-            botsApi.registerBot(telegramBotService);
+            botsApplication = new TelegramBotsLongPollingApplication();
+            botsApplication.registerBot(telegramBotService.getBotToken(), telegramBotService);
             log.info("Telegram bot registered and polling started.");
         } catch (TelegramApiException e) {
             log.error("Failed to register Telegram bot", e);
         }
     }
+
+    @PreDestroy
+    public void shutdown() throws Exception {
+        if (botsApplication != null) {
+            botsApplication.close();
+        }
+    }
+
 }
