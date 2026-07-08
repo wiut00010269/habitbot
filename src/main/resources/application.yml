@@ -1,0 +1,26 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/habitbot
+    username: postgres
+    password: ${DB_PASSWORD:root123}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+
+telegram:
+  bot:
+    username: ${BOT_USERNAME:nurbek_habit_bot}
+    token: ${BOT_TOKEN:8999303557:AAFWzyqia-dSylR-HQBT9V09bg7YIKwUOzc}
+
+# Which chat id(s) are allowed to use the bot (comma separated).
+# Leave empty to allow anyone (not recommended for a personal bot).
+allowed:
+  chat-ids: ${ALLOWED_CHAT_IDS:454910718}
+
+logging:
+  level:
+    uz.nurbek.habitbot: INFO
