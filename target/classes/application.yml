@@ -21,6 +21,9 @@ telegram:
 allowed:
   chat-ids: ${ALLOWED_CHAT_IDS:454910718}
 
+channel:
+  id: ${REPORT_CHANNEL_ID:-1001988358863}
+
 logging:
   level:
     uz.nurbek.habitbot: INFO

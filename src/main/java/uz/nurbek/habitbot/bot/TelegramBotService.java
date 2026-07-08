@@ -25,6 +25,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Telegram update consumer using the new (v10) telegrambots-longpolling API.
+ * TelegramBotsApi/DefaultBotSession from the old 6.x API no longer exist;
+ * registration now happens via TelegramBotsLongPollingApplication (see BotConfig).
+ */
 @Slf4j
 @Service
 public class TelegramBotService implements LongPollingSingleThreadUpdateConsumer {
@@ -127,10 +132,16 @@ public class TelegramBotService implements LongPollingSingleThreadUpdateConsumer
         sendText(chatId, confirmation.toString());
     }
 
+    // ---------- Send helpers: Long (private chats) and String (channels, e.g. "@mychannel") ----------
+
     public void sendText(Long chatId, String text) {
+        sendText(chatId.toString(), text);
+    }
+
+    public void sendText(String chatId, String text) {
         try {
             telegramClient.execute(SendMessage.builder()
-                    .chatId(chatId.toString())
+                    .chatId(chatId)
                     .text(text)
                     .build());
         } catch (TelegramApiException e) {
@@ -139,10 +150,14 @@ public class TelegramBotService implements LongPollingSingleThreadUpdateConsumer
     }
 
     public void sendPhoto(Long chatId, byte[] pngBytes, String caption) {
+        sendPhoto(chatId.toString(), pngBytes, caption);
+    }
+
+    public void sendPhoto(String chatId, byte[] pngBytes, String caption) {
         try {
             InputFile inputFile = new InputFile(new ByteArrayInputStream(pngBytes), "chart.png");
             SendPhoto sendPhoto = SendPhoto.builder()
-                    .chatId(chatId.toString())
+                    .chatId(chatId)
                     .photo(inputFile)
                     .caption(caption)
                     .build();
@@ -151,4 +166,5 @@ public class TelegramBotService implements LongPollingSingleThreadUpdateConsumer
             log.error("Failed to send photo to chatId={}", chatId, e);
         }
     }
+
 }
