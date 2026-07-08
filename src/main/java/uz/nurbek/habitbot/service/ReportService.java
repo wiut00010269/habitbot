@@ -8,15 +8,13 @@ import org.springframework.stereotype.Service;
 import uz.nurbek.habitbot.bot.TelegramBotService;
 import uz.nurbek.habitbot.entity.HabitEntry;
 import uz.nurbek.habitbot.repository.HabitEntryRepository;
+import uz.nurbek.habitbot.util.NumberFormatUtil;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -54,7 +52,6 @@ public class ReportService {
         // Reading
         CHANNEL_EMOJI_LABELS.put("page", "\uD83D\uDCD7 Page");
         CHANNEL_EMOJI_LABELS.put("audio", "\uD83C\uDFA7 Audio (min)");
-        CHANNEL_EMOJI_LABELS.put("book", "\uD83D\uDCD6 Reading (min)");
 
         // Screen time
         CHANNEL_EMOJI_LABELS.put("screen_time", "\uD83D\uDCF1 Screen time (min)");
@@ -67,6 +64,8 @@ public class ReportService {
         // Fallback for anything the parser couldn't classify
         CHANNEL_EMOJI_LABELS.put("unspecified", "\u2754 Other");
     }
+
+    private static final Set<String> MONEY_SUBTYPES = Set.of("transport", "food", "other");
 
     // @Lazy breaks the circular dependency: TelegramBotService -> ReportService -> TelegramBotService
     public ReportService(HabitEntryRepository repository,
@@ -113,7 +112,7 @@ public class ReportService {
         for (HabitEntryRepository.CategoryTotal t : totals) {
             String unit = t.getUnit() != null ? t.getUnit() : "";
             text.append("\u2022 ").append(t.getSubtype()).append(": ")
-                    .append(t.getTotal()).append(" ").append(unit).append("\n");
+                    .append(NumberFormatUtil.format(t.getTotal(), t.getUnit())).append(" ").append(unit).append("\n");
             labels.add(t.getSubtype());
             values.add(t.getTotal().doubleValue());
         }
@@ -126,21 +125,6 @@ public class ReportService {
         }
     }
 
-    // ---------- Channel broadcast (old #weeklyStatistics style) ----------
-
-    /**
-     * Posts a weekly summary to the configured Telegram channel, formatted like:
-     * <pre>
-     * 5-11-may. 2025-yil
-     * 🤲 Pray : 1
-     * ⏫ Pull up : 18
-     * ...
-     * 🤐 No soda: ❌✅✅❌❌✅❌
-     * 🚴 Bike (km): 2.8
-     * #weeklyStatistics
-     * </pre>
-     * Does nothing if {@code channel.id} is not configured.
-     */
     public void broadcastWeeklyToChannel(Long chatId, LocalDate monday, LocalDate sunday) {
         if (channelId == null || channelId.isBlank()) {
             return;
@@ -159,7 +143,10 @@ public class ReportService {
 
         for (Map.Entry<String, String> entry : CHANNEL_EMOJI_LABELS.entrySet()) {
             BigDecimal total = totalsBySubtype.getOrDefault(entry.getKey(), BigDecimal.ZERO);
-            text.append(entry.getValue()).append(" : ").append(stripTrailingZero(total)).append("\n");
+            String formatted = MONEY_SUBTYPES.contains(entry.getKey())
+                    ? NumberFormatUtil.money(total)
+                    : NumberFormatUtil.plain(total);
+            text.append(entry.getValue()).append(" : ").append(formatted).append("\n");
         }
 
         text.append("\uD83E\uDD10 No soda: ").append(buildNoSodaCheckboxes(weekEntries, monday)).append("\n");
@@ -179,7 +166,6 @@ public class ReportService {
         return monday.getDayOfMonth() + "-" + sunday.getDayOfMonth() + "-" + startMonth + "-" + endMonth + ". " + year + "-yil";
     }
 
-    // ✅ if a "no_soda" entry with value >= 1 exists that day, otherwise ❌ (also for days with no data)
     private String buildNoSodaCheckboxes(List<HabitEntry> weekEntries, LocalDate monday) {
         StringBuilder box = new StringBuilder();
         for (int i = 0; i < 7; i++) {
