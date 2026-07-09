@@ -27,7 +27,7 @@ public class ReportService {
 
     private static final String[] UZ_MONTHS = {
             "yanvar", "fevral", "mart", "aprel", "may", "iyun",
-            "iyul", "avgust", "sentabr", "oktabr", "noyabr", "dekabr"
+            "iyul", "avgust", "sentyabr", "oktyabr", "noyabr", "dekabr"
     };
 
     // subtype -> "emoji Label" used in the channel-style report, in fixed display order.
@@ -36,10 +36,10 @@ public class ReportService {
     private static final Map<String, String> CHANNEL_EMOJI_LABELS = new LinkedHashMap<>();
     static {
         // Exercise
-        CHANNEL_EMOJI_LABELS.put("pullup", "\u23EB Pull up");
-        CHANNEL_EMOJI_LABELS.put("pushup", "\u23EC Push up");
+        CHANNEL_EMOJI_LABELS.put("pullup", "⏫ Pull up");
+        CHANNEL_EMOJI_LABELS.put("pushup", "⏬ Push up");
         CHANNEL_EMOJI_LABELS.put("abs", "\uD83E\uDDD8 Press");
-        CHANNEL_EMOJI_LABELS.put("dips", "\u2195\uFE0F Dips");
+        CHANNEL_EMOJI_LABELS.put("dips", "↕️ Dips");
         CHANNEL_EMOJI_LABELS.put("bike", "\uD83D\uDEB4 Bike (km)");
         CHANNEL_EMOJI_LABELS.put("steps", "\uD83D\uDC63 Steps");
 
@@ -58,11 +58,11 @@ public class ReportService {
 
         // Expenses
         CHANNEL_EMOJI_LABELS.put("transport", "\uD83D\uDE95 Transport (so'm)");
-        CHANNEL_EMOJI_LABELS.put("food", "\uD83C\uDF7D\uFE0F Food (so'm)");
+        CHANNEL_EMOJI_LABELS.put("food", "\uD83C\uDF7D️ Food (so'm)");
         CHANNEL_EMOJI_LABELS.put("other", "\uD83D\uDCB5 Other expense (so'm)");
 
         // Fallback for anything the parser couldn't classify
-        CHANNEL_EMOJI_LABELS.put("unspecified", "\u2754 Other");
+        CHANNEL_EMOJI_LABELS.put("unspecified", "❔ Other");
     }
 
     private static final Set<String> MONEY_SUBTYPES = Set.of("transport", "food", "other");
@@ -111,7 +111,7 @@ public class ReportService {
 
         for (HabitEntryRepository.CategoryTotal t : totals) {
             String unit = t.getUnit() != null ? t.getUnit() : "";
-            text.append("\u2022 ").append(t.getSubtype()).append(": ")
+            text.append("• ").append(t.getSubtype()).append(": ")
                     .append(NumberFormatUtil.format(t.getTotal(), t.getUnit())).append(" ").append(unit).append("\n");
             labels.add(t.getSubtype());
             values.add(t.getTotal().doubleValue());
@@ -174,13 +174,9 @@ public class ReportService {
                     .anyMatch(e -> "no_soda".equals(e.getSubtype())
                             && e.getEntryDate().equals(day)
                             && e.getValue().compareTo(BigDecimal.ZERO) > 0);
-            box.append(success ? "\u2705" : "\u274C");
+            box.append(success ? "✅" : "❌");
         }
         return box.toString();
-    }
-
-    private String stripTrailingZero(BigDecimal value) {
-        return value.stripTrailingZeros().toPlainString();
     }
 
     // ---------- Scheduled automatic reports ----------

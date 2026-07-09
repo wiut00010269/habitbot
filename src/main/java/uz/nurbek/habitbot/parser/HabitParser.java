@@ -76,11 +76,14 @@ public class HabitParser {
         RULES.put("produkta", new String[]{"EXPENSE", "food", "som"});
         RULES.put("produxta", new String[]{"EXPENSE", "food", "som"});
         RULES.put("ovqat", new String[]{"EXPENSE", "food", "som"});
+        RULES.put("abet", new String[]{"EXPENSE", "food", "som"});
+        RULES.put("food", new String[]{"EXPENSE", "food", "som"});
         RULES.put("nonushta", new String[]{"EXPENSE", "food", "som"});
         RULES.put("tushlik", new String[]{"EXPENSE", "food", "som"});
         RULES.put("kechki", new String[]{"EXPENSE", "food", "som"});
         RULES.put("so'm", new String[]{"EXPENSE", "other", "som"});
         RULES.put("som", new String[]{"EXPENSE", "other", "som"});
+        RULES.put("kredit", new String[]{"EXPENSE", "loan", "som"});
     }
 
     /**
